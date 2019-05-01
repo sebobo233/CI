@@ -28,7 +28,7 @@ def calculate_mse(nn, x, y):
     :return: Training MSE, Testing MSE
     """
     ## TODO
-    mse = 0
+    mse = mean_squared_error(y, nn.predict(x)) 
     return mse
 
 
@@ -44,7 +44,16 @@ def ex_1_1_a(x_train, x_test, y_train, y_test):
     """
 
     ## TODO
-    pass
+    n_neur = 5 # 2, 5, 50
+    reg = MLPRegressor(hidden_layer_sizes=(n_neur,), max_iter=5000, activation='logistic', solver='lbfgs', alpha=0)
+
+    reg.fit(x_train, y_train)
+    y_pred_test = reg.predict(x_test)
+    y_pred_train = reg.predict(x_train)
+    
+    plot_learned_function(n_neur, x_train, y_train, y_pred_train, x_test, y_test, y_pred_test)
+
+
 
 
 def ex_1_1_b(x_train, x_test, y_train, y_test):
@@ -59,7 +68,42 @@ def ex_1_1_b(x_train, x_test, y_train, y_test):
     """
 
     ## TODO
-    pass
+
+    MSE_TEST = np.zeros(10, dtype=float)
+    MSE_TRAIN = np.zeros(10, dtype=float)
+
+    n_neur = 5
+    for j in range(10):
+        seed = np.random.randint(100)
+        reg = MLPRegressor(hidden_layer_sizes=(n_neur,), max_iter=5000, activation='logistic', solver='lbfgs', alpha=0,random_state=seed)
+        reg.fit(x_train, y_train)
+        mse = calculate_mse(reg, x_test, y_test)
+        MSE_TEST[j] = mse
+        
+        mse = calculate_mse(reg, x_train, y_train)
+        MSE_TRAIN[j] = mse
+
+    mse_test_max = max(MSE_TEST)
+    mse_test_min = min(MSE_TEST)
+    mse_test_mean = np.mean(MSE_TEST)
+    mse_test_std = np.std(MSE_TEST)
+
+    print("#####  Radom Seeds  #####")
+    
+    print("### Test Set ###")
+    print(" MAX  /  MIN  /  MEAN  /  STD")
+    print(round(mse_test_max,3), "/", round(mse_test_min,3), "/", round(mse_test_mean,3), "/", round(mse_test_std,3))
+    print("\n",MSE_TEST,"n")
+    
+    mse_train_max = max(MSE_TRAIN)
+    mse_train_min = min(MSE_TRAIN)
+    mse_train_mean = np.mean(MSE_TRAIN)
+    mse_train_std = np.std(MSE_TRAIN)
+    
+    print("\n### Training Set ###")
+    print(" MAX  /  MIN  /  MEAN  /  STD")
+    print(round(mse_train_max,3), "/", round(mse_train_min,3), "/", round(mse_train_mean,3), "/", round(mse_train_std,3))
+    print("\n",MSE_TRAIN,"n")
 
 
 def ex_1_1_c(x_train, x_test, y_train, y_test):
@@ -74,7 +118,30 @@ def ex_1_1_c(x_train, x_test, y_train, y_test):
     """
 
     ## TODO
-    pass
+    n_seeds = 10
+    n_neur = [1,2,3,4,6,8,12,20,40]
+    mse_train = np.zeros([np.size(n_neur), n_seeds])
+    mse_test = np.zeros([np.size(n_neur), n_seeds])
+
+    for h in range(np.size(n_neur)):
+        for s in range(n_seeds): 
+            seed = np.random.randint(100)
+            reg = MLPRegressor(hidden_layer_sizes=(n_neur[h],), max_iter=5000, activation='logistic', solver='lbfgs', alpha=0,random_state=seed)         
+            
+            reg.fit(x_train, y_train)            
+            mse_train[h, s] = calculate_mse(reg, x_train, y_train)
+            mse_test[h, s] = calculate_mse(reg, x_test, y_test)
+
+    plot_mse_vs_neurons(mse_train, mse_test, n_neur)
+    sum_mse = mse_test.sum(axis=1)
+    ind_min=sum_mse.argmin()
+    
+    reg = MLPRegressor(hidden_layer_sizes=(n_neur[ind_min],), max_iter=5000, activation='logistic', solver='lbfgs', alpha=0 , random_state=np.random.randint(100))
+
+    reg.fit(x_train, y_train)
+    y_pred_test = reg.predict(x_test)
+    y_pred_train = reg.predict(x_train)
+    plot_learned_function(n_neur[ind_min], x_train, y_train, y_pred_train, x_test, y_test, y_pred_test)
 
 
 def ex_1_1_d(x_train, x_test, y_train, y_test):
@@ -89,8 +156,25 @@ def ex_1_1_d(x_train, x_test, y_train, y_test):
     """
 
     ## TODO
-    pass
+    total_iter = 50
+    n_neur = [2,5,50]
+    solvers = ['lbfgs','sgd','adam']
+    counter_solv = 0
+    mse_train = np.zeros([np.size(n_neur), total_iter, np.size(solvers)])
+    mse_test = np.zeros([np.size(n_neur), total_iter, np.size(solvers)])
+    for solv in solvers:
+        for j in range(np.size(n_neur)):
+            reg = MLPRegressor(hidden_layer_sizes=(n_neur[j],), activation='logistic', solver=solv, alpha=0, random_state=0, warm_start=True, max_iter=1)
+            for r in range(total_iter):
+                reg.fit(x_train, y_train)            
+                mse_train[j, r, counter_solv] = calculate_mse(reg, x_train, y_train)
+                mse_test[j, r, counter_solv] = calculate_mse(reg, x_test, y_test)
+        counter_solv += 1
+            
 
+    # PLOT
+    for s in range(np.size(solvers)):
+        plot_mse_vs_neurons(mse_train[:,:,s], mse_test[:,:,s], n_neur)
 
 def ex_1_2_a(x_train, x_test, y_train, y_test):
     """
@@ -102,7 +186,23 @@ def ex_1_2_a(x_train, x_test, y_train, y_test):
     :return:
     """
     ## TODO
-    pass
+    total_iter = 5000
+    n_neuro = 50
+    alph = np.power(10, np.linspace(-8, 2, 11))
+    mse_train = np.zeros([np.size(alph), total_iter])
+    mse_test = np.zeros([np.size(alph), total_iter])
+    
+    for j in range(np.size(alph)):
+        reg = MLPRegressor(hidden_layer_sizes=(n_hidden,), activation='logistic', solver='lbfgs', alpha=alph[j], random_state=np.random.randint(100), warm_start=True, max_iter=1)
+        for r in range(total_iter):
+            reg.fit(x_train, y_train)
+            
+            mse_train[j, r] = calculate_mse(reg, x_train, y_train)
+            mse_test[j, r] = calculate_mse(reg, x_test, y_test)
+            
+    
+    plot_mse_vs_alpha(mse_train, mse_test, alph)
+
 
 
 def ex_1_2_b(x_train, x_test, y_train, y_test):

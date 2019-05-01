@@ -44,11 +44,15 @@ def main():
     ## End plot some random images
 
     ## 2.1
-    ex_2_1(input2, target2)
+    C = ex_2_1(input2, target2)
     ## End 2.1
 
     ## 2.2
-    # ex_2_2(input1, target1, input2, target2)
+    #train_acc, test_acc, y_pred, C = ex_2_2(input1, target1, input2, target2)
+    #plot_histogram_of_acc(train_acc, test_acc) 
+    #print(C)
+    
+    
     ## End 2.2
 
 

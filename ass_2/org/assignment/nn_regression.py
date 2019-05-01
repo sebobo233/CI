@@ -188,17 +188,18 @@ def ex_1_2_a(x_train, x_test, y_train, y_test):
     ## TODO
     total_iter = 5000
     n_neuro = 50
+    n_seeds = 10
     alph = np.power(10, np.linspace(-8, 2, 11))
-    mse_train = np.zeros([np.size(alph), total_iter])
-    mse_test = np.zeros([np.size(alph), total_iter])
+    mse_train = np.zeros([np.size(alph),n_seeds])
+    mse_test = np.zeros([np.size(alph),n_seeds])
     
     for j in range(np.size(alph)):
-        reg = MLPRegressor(hidden_layer_sizes=(n_hidden,), activation='logistic', solver='lbfgs', alpha=alph[j], random_state=np.random.randint(100), warm_start=True, max_iter=1)
-        for r in range(total_iter):
-            reg.fit(x_train, y_train)
-            
-            mse_train[j, r] = calculate_mse(reg, x_train, y_train)
-            mse_test[j, r] = calculate_mse(reg, x_test, y_test)
+        for s in range(n_seeds): 
+            seed = np.random.randint(100)
+            reg = MLPRegressor(hidden_layer_sizes=(n_neuro,), activation='logistic', solver='lbfgs', alpha=alph[j], random_state=seed,  max_iter=total_iter)
+            reg.fit(x_train, y_train)            
+            mse_train[j, s] = calculate_mse(reg, x_train, y_train)
+            mse_test[j, s] = calculate_mse(reg, x_test, y_test)
             
     
     plot_mse_vs_alpha(mse_train, mse_test, alph)
@@ -215,7 +216,47 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
     :return:
     """
     ## TODO
-    pass
+    total_iter = 1000
+    epoch_iter = 20
+    epochs = int(total_iter/epoch_iter)
+    n_neuro = 50
+    n_seeds = 10
+    
+    sequence = np.random.permutation(np.arange(0, np.size(y_train), 1))
+    x_train = x_train[sequence]
+    y_train = y_train[sequence]
+    SIZE = int(np.ceil(np.size(y_train) / 3))
+
+    x_val = x_train[:SIZE]
+    y_val = y_train[:SIZE]
+
+    x_train = x_train[SIZE:]
+    y_train = y_train[SIZE:]
+
+    mse_train = np.zeros([n_seeds,epochs])
+    mse_val = np.zeros([n_seeds,epochs])
+    
+    
+    for s in range(n_seeds):
+        seed = np.random.randint(100)
+        reg = MLPRegressor(hidden_layer_sizes=(n_neuro,), activation='logistic', solver='lbfgs', alpha=0, random_state=seed,  warm_start=True, max_iter=epoch_iter)
+        for ep in range(epochs):            
+            reg.fit(x_train, y_train) 
+            mse_train[s,ep] = calculate_mse(reg, x_train, y_train)
+            mse_val[s,ep] = calculate_mse(reg, x_val, y_val)
+
+    ## Last MSE Value of Test Set
+    last_test_error = mse_train[:,-1]
+
+    ## MSE Value where validation set has minimum
+    min_val_error = np.amin(mse_val, axis=1)
+    test_error_min_val_error = mse_train[mse_val==min_val_error]
+
+    ## MSE Value where test set has minimum
+    min_test_error = np.amin(mse_train, axis=1)
+    
+    # Plot            
+    plot_bars_early_stopping_mse_comparison(last_test_error, test_error_min_val_error, min_test_error)
 
 
 def ex_1_2_c(x_train, x_test, y_train, y_test):

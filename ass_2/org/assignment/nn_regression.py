@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.neural_network.multilayer_perceptron import MLPRegressor
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 from nn_regression_plot import plot_mse_vs_neurons, plot_mse_vs_iterations, plot_learned_function, \
     plot_mse_vs_alpha, plot_bars_early_stopping_mse_comparison
@@ -216,9 +217,9 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
     :return:
     """
     ## TODO
-    total_iter = 1000
+    total_iter = 50000
     epoch_iter = 20
-    epochs = int(total_iter/epoch_iter)
+    epochs = total_iter//epoch_iter
     n_neuro = 50
     n_seeds = 10
     
@@ -235,25 +236,28 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
 
     mse_train = np.zeros([n_seeds,epochs])
     mse_val = np.zeros([n_seeds,epochs])
-    
+    mse_test = np.zeros([n_seeds,epochs])
     
     for s in range(n_seeds):
-        seed = np.random.randint(100)
-        reg = MLPRegressor(hidden_layer_sizes=(n_neuro,), activation='logistic', solver='lbfgs', alpha=0, random_state=seed,  warm_start=True, max_iter=epoch_iter)
+        reg = MLPRegressor(hidden_layer_sizes=(n_neuro,), activation='logistic', solver='lbfgs', alpha=0, random_state=s,  warm_start=True, max_iter=epoch_iter)
         for ep in range(epochs):            
             reg.fit(x_train, y_train) 
             mse_train[s,ep] = calculate_mse(reg, x_train, y_train)
             mse_val[s,ep] = calculate_mse(reg, x_val, y_val)
+            mse_test[s,ep] = calculate_mse(reg, x_test, y_test)
 
     ## Last MSE Value of Test Set
-    last_test_error = mse_train[:,-1]
+    last_test_error = mse_test[:,-1]
 
     ## MSE Value where validation set has minimum
-    min_val_error = np.amin(mse_val, axis=1)
-    test_error_min_val_error = mse_train[mse_val==min_val_error]
+    #min_val_error = np.amin(mse_val, axis=1)
+    #test_error_min_val_error = mse_val[mse_val==min_val_error]
+    
+    min_val_index = np.argmin(mse_val, axis=1)
+    test_error_min_val_error = mse_test[range(n_seeds), min_val_index]
 
     ## MSE Value where test set has minimum
-    min_test_error = np.amin(mse_train, axis=1)
+    min_test_error = np.amin(mse_test, axis=1)
     
     # Plot            
     plot_bars_early_stopping_mse_comparison(last_test_error, test_error_min_val_error, min_test_error)
@@ -269,4 +273,63 @@ def ex_1_2_c(x_train, x_test, y_train, y_test):
     :return:
     """
     ## TODO
-    pass
+    #pass
+    
+    total_iter = 10000
+    epoch_iter = 20
+    epochs = total_iter//epoch_iter
+    n_neuro = 6
+    n_seeds = 10
+    
+    """
+    sequence = np.random.permutation(np.arange(0, np.size(y_train), 1))
+
+    x_train = x_train[sequence]
+    y_train = y_train[sequence]
+    SIZE = int(np.ceil(np.size(y_train) / 3))
+
+    x_val = x_train[:SIZE]
+    y_val = y_train[:SIZE]
+
+    x_train = x_train[SIZE:]
+    y_train = y_train[SIZE:]
+    """
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33)
+    
+    mse_train = np.zeros([n_seeds,epochs])
+    mse_val = np.zeros([n_seeds,epochs])
+    mse_test = np.zeros([n_seeds,epochs])
+
+    #seeds = random.sample(range(1, 100), n_seeds)
+    seeds = np.zeros(n_seeds)
+    
+    for s in range(n_seeds):
+        seed = s#np.random.randint(100)
+        seeds[s] = seed
+        
+        reg = MLPRegressor(hidden_layer_sizes=(n_neuro,), activation='logistic', solver='lbfgs', alpha=1e-3, random_state=seed, warm_start=True, max_iter=epoch_iter)   
+        for ep in range(epochs):            
+            reg.fit(x_train, y_train) 
+            mse_train[s,ep] = calculate_mse(reg, x_train, y_train)
+            mse_val[s,ep] = calculate_mse(reg, x_val, y_val)
+            mse_test[s,ep] = calculate_mse(reg, x_test, y_test)
+
+            
+        y_pred_test = reg.predict(x_test)
+        y_pred_train = reg.predict(x_train)
+        plot_learned_function(n_neuro, x_train, y_train, y_pred_train, x_test, y_test, y_pred_test)
+    
+    
+    
+    #min_val_index = np.argmin(mse_val, axis=1)
+    import pdb
+    pdb.set_trace()
+    min_val_index = np.unravel_index(mse_val.argmin(), mse_val.shape)
+    
+    error_min_seed = seeds[min_val_index[0]]
+    error_min
+
+    #print(seeds)
+    #print(min_val_index)
+    print('Seed: ', error_min_seed)
+    

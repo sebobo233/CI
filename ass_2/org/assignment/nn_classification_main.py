@@ -45,6 +45,7 @@ def main():
 
     ## 2.1
     C = ex_2_1(input2, target2)
+    print(C)
     ## End 2.1
 
     ## 2.2

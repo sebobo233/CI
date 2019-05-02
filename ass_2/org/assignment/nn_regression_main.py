@@ -65,10 +65,10 @@ def main():
     #ex_1_2_a(x_train, x_test, y_train, y_test)
 
     ## 1.2 b)
-    ex_1_2_b(x_train, x_test, y_train, y_test)
+    #ex_1_2_b(x_train, x_test, y_train, y_test)
 
     ## 1.2 c)
-    #ex_1_2_c(x_train, x_test, y_train, y_test)
+    ex_1_2_c(x_train, x_test, y_train, y_test)
 
 
 if __name__ == '__main__':

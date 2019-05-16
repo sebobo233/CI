@@ -219,7 +219,7 @@ def ex_3_b(x_train, y_train, x_test, y_test):
 
     labels = range(1, 6)
 
-    svc_ovo = svm.SVC(kernel ='linear', decision_function_shape='ovo').fit(x_train, y_train)
+    svc_ovo = svm.SVC(kernel ='linear', decision_function_shape='ovo', C = 10).fit(x_train, y_train)
 
     y_pred = svc_ovo.predict(x_test)
     cm = confusion_matrix(y_test, y_pred)
@@ -230,5 +230,8 @@ def ex_3_b(x_train, y_train, x_test, y_test):
     np.fill_diagonal(cp,0)
     i = np.argmax(np.max(cp, axis=0))  # should be the label number corresponding the largest classification error
     sel_err = np.argwhere(np.not_equal(y_test, y_pred))  # Numpy indices to select images that are misclassified.
+
+    import pdb 
+    pdb.set_trace()
 
     plot_mnist(x_test[sel_err], y_pred[sel_err], labels=labels[i], k_plots=10, prefix='Real class')
